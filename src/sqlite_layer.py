@@ -3,7 +3,6 @@ import sqlite3
 
 import pandas as pd
 
-
 from src.utils import setup_logger
 logger = setup_logger(__name__)
 
@@ -11,22 +10,26 @@ logger = setup_logger(__name__)
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
-def load_raw_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def load_raw_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Load raw Walmart datasets from locally stored CSV files.
 
+    Reads the files corresponding to sales (train), test, store features,
+    and store metadata from the raw data directory.
+
     Returns:
-        tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: A tuple containing
-            the sales, features, and stores DataFrames respectively.
+        tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]: A tuple containing
+            the sales, test, features, and stores DataFrames respectively.
     """
     raw_path = PROJECT_ROOT / "data" / "raw"
 
     sales_df = pd.read_csv(raw_path / "train.csv")
+    test_df = pd.read_csv(raw_path / "test.csv")
     features_df = pd.read_csv(raw_path / "features.csv")
     stores_df = pd.read_csv(raw_path / "stores.csv")
 
     logger.info("Raw files loaded successfully")
 
-    return sales_df, features_df, stores_df
+    return sales_df, test_df, features_df, stores_df
 
 
 def create_connection() -> sqlite3.Connection:
@@ -47,22 +50,22 @@ def create_connection() -> sqlite3.Connection:
 def load_tables(
     conn: sqlite3.Connection,
     sales_df: pd.DataFrame,
+    test_df: pd.DataFrame,
     features_df: pd.DataFrame,
     stores_df: pd.DataFrame,
 ) -> None:
     """Load Pandas DataFrames into relational tables inside SQLite.
 
-    Inserts or replaces the 'sales', 'features', and 'stores' tables using
-    the provided data.
-
     Args:
         conn (sqlite3.Connection): Active SQLite database connection.
-        sales_df (pd.DataFrame): DataFrame containing sales information.
+        sales_df (pd.DataFrame): DataFrame containing training sales information.
+        test_df (pd.DataFrame): DataFrame containing test information.
         features_df (pd.DataFrame): DataFrame containing additional features.
         stores_df (pd.DataFrame): DataFrame containing store metadata.
     """
     tables = {
         "sales": sales_df,
+        "test": test_df,
         "features": features_df,
         "stores": stores_df,
     }
@@ -100,28 +103,33 @@ def create_views(conn: sqlite3.Connection) -> None:
 
 
 def validate_database(conn: sqlite3.Connection) -> None:
-    """Validate that the main analytical views contain valid records.
+    """Validate that the main train and test analytical views contain valid records.
 
     Args:
         conn (sqlite3.Connection): Active SQLite database connection.
     """
     cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM forecasting_dataset")
-    total_rows = cursor.fetchone()[0]
 
-    logger.info("Forecasting dataset rows: %s", total_rows)
+    cursor.execute("SELECT COUNT(*) FROM train_dataset")
+    train_rows = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM test_dataset")
+    test_rows = cursor.fetchone()[0]
+
+    logger.info("Train dataset rows: %s", train_rows)
+    logger.info("Test dataset rows: %s", test_rows)
 
 
 def main() -> None:
     """Main function that orchestrates the construction of the SQLite analytical layer."""
     logger.info("Building SQLite analytics layer")
 
-    # 1. Load original CSV files
-    sales_df, features_df, stores_df = load_raw_data()
+    # 1. Load original CSV files including test dataset
+    sales_df, test_df, features_df, stores_df = load_raw_data()
 
     # 2. Manage database connection using a context manager to ensure safe closing
     with create_connection() as conn:
-        load_tables(conn, sales_df, features_df, stores_df)
+        load_tables(conn, sales_df, test_df, features_df, stores_df)
         create_views(conn)
         validate_database(conn)
 
