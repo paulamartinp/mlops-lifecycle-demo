@@ -9,4 +9,5 @@ dependencies = [
     "kaggle>=2.2.4",
     "pandas>=3.0.5",
     "python-dotenv>=1.2.3",
+    "seaborn>=0.13.2",
 ]
