@@ -223,3 +223,8 @@ __marimo__/
 main.py
 .env
 .kaggle
+
+data/raw/
+data/processed/
+data/features/
+db/sales.db
