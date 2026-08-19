@@ -1,0 +1,5 @@
+dataset:
+  kaggle_id: "aslanahmedov/walmart-sales-forecast"
+
+paths:
+  raw_data: "data/raw"
