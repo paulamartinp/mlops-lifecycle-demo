@@ -1,6 +1,9 @@
 from pathlib import Path
 import logging
 import sys
+import pandas as pd
+import yaml
+import sqlite3
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 LOGS_DIR = PROJECT_ROOT / "logs"
@@ -43,3 +46,43 @@ def setup_logger(name: str) -> logging.Logger:
     logger.addHandler(file_handler)
 
     return logger
+
+
+def load_params(path: Path) -> dict:
+    """Load configuration parameters from a YAML file.
+
+    Args:
+        path (Path): Absolute or relative path to the YAML configuration file.
+
+    Returns:
+        dict: Dictionary containing configuration parameters.
+    """
+    with open(path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+
+def load_dataset_from_db(project_root: Path) -> pd.DataFrame:
+    """Load the training dataset view directly from the SQLite database.
+
+    Args:
+        project_root (Path): The root directory of the project.
+
+    Returns:
+        pd.DataFrame: The loaded training dataset containing sales and features.
+    """
+    db_path = project_root / "db" / "sales.db"
+
+    if not db_path.exists():
+        raise FileNotFoundError(
+            f"Database not found at {db_path}. Please run your database ingestion script first."
+        )
+    logger = setup_logger(__name__)
+    logger.info("Loading dataset from SQLite database at %s", db_path)
+    with sqlite3.connect(db_path) as conn:
+        # Consultamos la vista analítica creada por tu script anterior
+        df = pd.read_sql("SELECT * FROM train_dataset", conn)
+
+    logger.info(
+        "Dataset loaded successfully (%s rows, %s columns)", df.shape[0], df.shape[1]
+    )
+    return df
