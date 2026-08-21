@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import yaml
 from kaggle.api.kaggle_api_extended import KaggleApi
 
-from src.utils import setup_logger
+from src.utils.helpers import setup_logger
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -31,9 +31,7 @@ def load_environment() -> None:
     key = os.getenv("KAGGLE_KEY")
 
     if not username or not key:
-        raise ValueError(
-            "KAGGLE_USERNAME and KAGGLE_KEY must be defined in .env"
-        )
+        raise ValueError("KAGGLE_USERNAME and KAGGLE_KEY must be defined in .env")
 
     # Explicitly set environment variables for the Kaggle client
     os.environ["KAGGLE_USERNAME"] = username
@@ -57,9 +55,7 @@ def load_params() -> dict:
     params_path = PROJECT_ROOT / "params.yaml"
 
     if not params_path.exists():
-        raise FileNotFoundError(
-            f"params.yaml not found: {params_path}"
-        )
+        raise FileNotFoundError(f"params.yaml not found: {params_path}")
 
     with open(params_path, "r", encoding="utf-8") as file:
         return yaml.safe_load(file)
@@ -114,7 +110,7 @@ def download_dataset(dataset: str, output_path: str) -> None:
     )
 
 
-def main() -> None:
+def download_raw_data() -> None:
     """Main function that orchestrates the data ingestion process."""
     logger.info("Starting data ingestion process")
 
@@ -141,4 +137,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    download_raw_data()
