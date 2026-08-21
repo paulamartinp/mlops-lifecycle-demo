@@ -1,7 +1,8 @@
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from src.utils import setup_logger
+from src.utils.helpers import setup_logger
+
 logger = setup_logger(__name__)
 
 
@@ -50,9 +51,7 @@ class RetailFeaturePipeline(BaseEstimator, TransformerMixin):
         if "Date" in df.columns:
             df["Date"] = pd.to_datetime(df["Date"])
             if {"Store", "Dept"}.issubset(df.columns):
-                df = df.sort_values(by=["Store", "Dept", "Date"]).reset_index(
-                    drop=True
-                )
+                df = df.sort_values(by=["Store", "Dept", "Date"]).reset_index(drop=True)
 
         # 2. Calendar features extraction
         if "Date" in df.columns:
@@ -103,5 +102,8 @@ class RetailFeaturePipeline(BaseEstimator, TransformerMixin):
             "Pipeline transformation completed. Total remaining missing values: %s",
             remaining_missing,
         )
+        # 6. Remove raw Date column before sklearn preprocessing
+        if "Date" in df.columns:
+            df = df.drop(columns=["Date"])
 
         return df

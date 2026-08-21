@@ -3,7 +3,8 @@ import sqlite3
 
 import pandas as pd
 
-from src.utils import setup_logger
+from src.utils.helpers import setup_logger
+
 logger = setup_logger(__name__)
 
 # Define project root directory (goes up 1 level from the src/ folder)
@@ -120,7 +121,7 @@ def validate_database(conn: sqlite3.Connection) -> None:
     logger.info("Test dataset rows: %s", test_rows)
 
 
-def main() -> None:
+def create_sqlite_db() -> None:
     """Main function that orchestrates the construction of the SQLite analytical layer."""
     logger.info("Building SQLite analytics layer")
 
@@ -137,4 +138,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    create_sqlite_db()
