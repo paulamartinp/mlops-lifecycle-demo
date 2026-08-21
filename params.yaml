@@ -3,3 +3,65 @@ dataset:
 
 paths:
   raw_data: "data/raw"
+
+train:
+  models:
+    - baseline
+    - xgboost
+    - lightgbm
+
+  target: Weekly_Sales
+  random_state: 42
+
+  numeric_features:
+    - Store
+    - Dept
+    - IsHoliday
+    - Temperature
+    - Fuel_Price
+    - MarkDown1
+    - MarkDown2
+    - MarkDown3
+    - MarkDown4
+    - MarkDown5
+    - CPI
+    - Unemployment
+    - Store_Size
+    - Month
+    - Week
+    - Quarter
+
+  categorical_features:
+    - Store_Type
+
+  feature_set:
+    - Store
+    - Dept
+    - IsHoliday
+    - Temperature
+    - Fuel_Price
+    - MarkDown1
+    - MarkDown2
+    - MarkDown3
+    - MarkDown4
+    - MarkDown5
+    - CPI
+    - Unemployment
+    - Store_Type
+    - Store_Size
+    - Month
+    - Week
+    - Quarter
+
+  baseline:
+    strategy: mean
+
+  xgboost:
+    n_estimators: 200
+    max_depth: 6
+    learning_rate: 0.05
+
+  lightgbm:
+    n_estimators: 200
+    max_depth: 6
+    learning_rate: 0.05
