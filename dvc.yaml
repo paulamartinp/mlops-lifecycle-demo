@@ -1,6 +1,18 @@
 stages:
+  download_data:
+    cmd: python -m src.data.download_kaggle
+    outs:
+      - data/raw
+
+  create_db:
+    cmd: python -m src.data.sqlite_layer
+    deps:
+      - data/raw
+    outs:
+      - db/sales.db
+
   train_pipeline:
-    cmd: python -m src.pipeline.training_pipeline
+    cmd: python -m src.pipelines.training_pipeline
     deps:
       - src
       - params.yaml
