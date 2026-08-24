@@ -228,3 +228,7 @@ data/raw/
 data/processed/
 data/features/
 db/sales.db
+
+mlflow.db
+mlruns/1/
+*.pkl
