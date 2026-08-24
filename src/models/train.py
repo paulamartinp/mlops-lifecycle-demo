@@ -14,9 +14,9 @@ from src.models.builder import build_model_pipeline
 from src.models.evaluate import evaluate_model
 from src.features.preprocess import RetailFeaturePipeline
 from src.utils.helpers import setup_logger, load_params, load_dataset_from_db
+from src.utils.paths import PROJECT_ROOT, DB_DIR, PARAMS_FILE
 
 logger = setup_logger(__name__)
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 def split_train_valid(df: pd.DataFrame):
@@ -55,7 +55,8 @@ def run_training():
     """
     logger.info("Starting training module")
 
-    params = load_params(PROJECT_ROOT / "params.yaml")
+    # Load params from central path
+    params = load_params(PARAMS_FILE)
 
     # Load dataset
     df_raw = load_dataset_from_db(PROJECT_ROOT)

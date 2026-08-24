@@ -1,46 +1,40 @@
-from pathlib import Path
 import logging
 import sys
 import pandas as pd
+from pathlib import Path
 import yaml
 import sqlite3
-
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-LOGS_DIR = PROJECT_ROOT / "logs"
+from dotenv import load_dotenv
+import os
+from src.utils.paths import LOGS_DIR, PARAMS_FILE, PROJECT_ROOT
 
 
 def setup_logger(name: str) -> logging.Logger:
-    """Configures and returns a logger instance with console and file handlers.
+    """Configure and return a logger with both console and file handlers.
 
     Args:
-        name (str): The name of the logger, typically __name__ of the calling module.
+        name (str): Name of the logger, typically `__name__` of the calling module.
 
     Returns:
         logging.Logger: Configured logger instance.
     """
-    # Create logs directory if it doesn't exist
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
     log_file_path = LOGS_DIR / "app.log"
 
-    # Create logger
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
 
-    # Prevent adding multiple handlers if the logger is already configured
     if logger.hasHandlers():
         return logger
 
-    # Define standard log format
     formatter = logging.Formatter(
         "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
     )
 
-    # Handler for console output (stdout)
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
 
-    # Handler for file output
     file_handler = logging.FileHandler(log_file_path, encoding="utf-8")
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
@@ -48,14 +42,17 @@ def setup_logger(name: str) -> logging.Logger:
     return logger
 
 
-def load_params(path: Path) -> dict:
+def load_params(path: Path = PARAMS_FILE) -> dict:
     """Load configuration parameters from a YAML file.
 
     Args:
-        path (Path): Absolute or relative path to the YAML configuration file.
+        path (Path, optional): Path to the YAML parameter file. Defaults to PARAMS_FILE.
 
     Returns:
-        dict: Dictionary containing configuration parameters.
+        dict: Dictionary containing the loaded configuration parameters.
+
+    Raises:
+        FileNotFoundError: If the parameter file does not exist.
     """
     with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
@@ -86,3 +83,19 @@ def load_dataset_from_db(project_root: Path) -> pd.DataFrame:
         "Dataset loaded successfully (%s rows, %s columns)", df.shape[0], df.shape[1]
     )
     return df
+
+
+def load_environment() -> None:
+    logger = setup_logger(__name__)
+
+    # Cargar .env si existe
+    load_dotenv(PROJECT_ROOT / ".env", override=True)
+
+    # Detectar si hay API Key
+    username = os.getenv("KAGGLE_USERNAME")
+    key = os.getenv("KAGGLE_KEY")
+
+    if username and key:
+        logger.info("Using Kaggle API Key authentication")
+    else:
+        logger.info("Using Kaggle OAuth authentication (no API Key found)")
