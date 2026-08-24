@@ -128,6 +128,8 @@ def run_full_pipeline() -> None:
     best_model, best_metrics, best_name, all_results = run_training()
 
     # Log all models to MLflow Tracking
+    best_run_id = None
+
     for result in all_results:
         with mlflow.start_run(run_name=f"{result['name']}-training") as run:
             mlflow.log_metrics(result["metrics"])
@@ -139,58 +141,84 @@ def run_full_pipeline() -> None:
                 serialization_format="pickle",
             )
 
+            if result["name"] == best_name:
+                best_run_id = run.info.run_id
+
     # Get current Champion
     client = MlflowClient()
     champion = get_current_champion(f"retail-{best_name}")
 
     if champion:
         logger.info(f"Current champion: v{champion['version']} ({champion['stage']})")
-        logger.info(f"Champion RMSE: {champion['metrics']['rmse']:.4f}")
+        logger.info(f"Available champion metrics: {list(champion['metrics'].keys())}")
 
         if not challenger_is_better(best_metrics, champion["metrics"]):
             logger.info(
-                "The new model does NOT improve upon the Champion → not registered."
+                "The new model does NOT improve upon the Champion → keeping current champion."
             )
-            return
         else:
             logger.info(
-                "The new model improves upon the Champion → registered and promoted."
+                "The new model improves upon the Champion → registering and promoting."
             )
+
+            # Register ONLY the best model
+            with mlflow.start_run(run_name=f"{best_name}-registration") as run:
+                mlflow.log_metrics(best_metrics)
+                model_info = mlflow.sklearn.log_model(
+                    sk_model=best_model,
+                    artifact_path="model",
+                    registered_model_name=f"retail-{best_name}",
+                    serialization_format="pickle",
+                )
+
+            result = register_model(
+                model_uri=model_info.model_uri,
+                name=f"retail-{best_name}",
+            )
+
+            # Promote to Production
+            client.transition_model_version_stage(
+                name=result.name,
+                version=result.version,
+                stage="Production",
+                archive_existing_versions=True,
+            )
+            logger.info(f"New Champion: {result.name} v{result.version} ✓")
     else:
         logger.info("No Champion found → registering the first model.")
+        with mlflow.start_run(run_name=f"{best_name}-registration") as run:
+            mlflow.log_metrics(best_metrics)
+            model_info = mlflow.sklearn.log_model(
+                sk_model=best_model,
+                artifact_path="model",
+                registered_model_name=f"retail-{best_name}",
+                serialization_format="pickle",
+            )
 
-    # Register ONLY the best model
-    with mlflow.start_run(run_name=f"{best_name}-registration") as run:
-        model_info = mlflow.sklearn.log_model(
-            sk_model=best_model,
-            artifact_path="model",
-            registered_model_name=f"retail-{best_name}",
-            serialization_format="pickle",
+        result = register_model(
+            model_uri=model_info.model_uri,
+            name=f"retail-{best_name}",
         )
 
-    result = register_model(
-        model_uri=model_info.model_uri,
-        name=f"retail-{best_name}",
-    )
+        client.transition_model_version_stage(
+            name=result.name,
+            version=result.version,
+            stage="Production",
+            archive_existing_versions=True,
+        )
+        logger.info(f"New Champion: {result.name} v{result.version} ✓")
 
-    # Promote to Production
-    client.transition_model_version_stage(
-        name=result.name,
-        version=result.version,
-        stage="Production",
-        archive_existing_versions=True,
-    )
+    # Save Champion locally
+    target_model_name = f"retail-{best_name}"
+    champion_uri = f"models:/{target_model_name}/Production"
 
-    logger.info(f"New Champion: {result.name} v{result.version} ✓")
-
-    # === Save Champion locally ===
-    champion_uri = f"models:/retail-{best_name}/Production"
+    logger.info(f"Downloading production champion from: {champion_uri}")
     champion_model = mlflow.sklearn.load_model(champion_uri)
 
     models_dir = PROJECT_ROOT / "models"
     models_dir.mkdir(parents=True, exist_ok=True)
 
-    champion_local_path = models_dir / f"champion.pkl"
+    champion_local_path = models_dir / "champion.pkl"
     joblib.dump(champion_model, champion_local_path)
 
     logger.info(f"Champion saved locally at: {champion_local_path}")
