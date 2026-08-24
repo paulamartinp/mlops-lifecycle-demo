@@ -6,59 +6,11 @@ from dotenv import load_dotenv
 import yaml
 from kaggle.api.kaggle_api_extended import KaggleApi
 
-from src.utils.helpers import setup_logger
-
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-
+from src.utils.helpers import setup_logger, load_params, load_environment
+from src.utils.paths import RAW_DATA_DIR
 
 # Initialize the logger for this module
 logger = setup_logger(__name__)
-
-
-def load_environment() -> None:
-    """Load and validate Kaggle credentials from the .env file.
-
-    Reads the KAGGLE_USERNAME and KAGGLE_KEY environment variables, ensuring
-    that they are properly configured in the system to allow authentication
-    with the Kaggle API.
-
-    Raises:
-        ValueError: If either of the Kaggle credentials is not defined.
-    """
-    load_dotenv()
-
-    username = os.getenv("KAGGLE_USERNAME")
-    key = os.getenv("KAGGLE_KEY")
-
-    if not username or not key:
-        raise ValueError("KAGGLE_USERNAME and KAGGLE_KEY must be defined in .env")
-
-    # Explicitly set environment variables for the Kaggle client
-    os.environ["KAGGLE_USERNAME"] = username
-    os.environ["KAGGLE_KEY"] = key
-
-    logger.info("Kaggle credentials loaded")
-
-
-def load_params() -> dict:
-    """Load the global configuration parameters of the project.
-
-    Reads the `params.yaml` file located in the project root to extract
-    configurations such as dataset identifiers and directory paths.
-
-    Returns:
-        dict: Dictionary containing the loaded configuration parameters.
-
-    Raises:
-        FileNotFoundError: If the `params.yaml` file does not exist in the root.
-    """
-    params_path = PROJECT_ROOT / "params.yaml"
-
-    if not params_path.exists():
-        raise FileNotFoundError(f"params.yaml not found: {params_path}")
-
-    with open(params_path, "r", encoding="utf-8") as file:
-        return yaml.safe_load(file)
 
 
 def create_output_directory(output_path: str) -> None:
@@ -122,7 +74,7 @@ def download_raw_data() -> None:
 
     # 3. Extract key variables for the download
     dataset = params["dataset"]["kaggle_id"]
-    output_path = PROJECT_ROOT / params["paths"]["raw_data"]
+    output_path = RAW_DATA_DIR
 
     # 4. Ensure the output directory exists
     create_output_directory(output_path)

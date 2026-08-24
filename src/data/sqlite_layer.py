@@ -4,11 +4,9 @@ import sqlite3
 import pandas as pd
 
 from src.utils.helpers import setup_logger
+from src.utils.paths import RAW_DATA_DIR, DB_DIR
 
 logger = setup_logger(__name__)
-
-# Define project root directory (goes up 1 level from the src/ folder)
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 def load_raw_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -21,14 +19,32 @@ def load_raw_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFr
         tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]: A tuple containing
             the sales, test, features, and stores DataFrames respectively.
     """
-    raw_path = PROJECT_ROOT / "data" / "raw"
 
-    sales_df = pd.read_csv(raw_path / "train.csv")
-    test_df = pd.read_csv(raw_path / "test.csv")
-    features_df = pd.read_csv(raw_path / "features.csv")
-    stores_df = pd.read_csv(raw_path / "stores.csv")
+    # --- Validate presence of expected CSV files ---
+    expected_files = ["train.csv", "test.csv", "features.csv", "stores.csv"]
+    for filename in expected_files:
+        file_path = RAW_DATA_DIR / filename
 
-    logger.info("Raw files loaded successfully")
+        # Check file exists
+        if not file_path.exists():
+            logger.error(f"Missing required file: {file_path}")
+            raise FileNotFoundError(f"Required file not found: {file_path}")
+
+        # Check file size in MB
+        size_mb = file_path.stat().st_size / (1024 * 1024)
+        if size_mb < 0.0001:  # ~1 KB threshold
+            logger.error(f"File {filename} is too small ({size_mb:.4f} MB)")
+            raise ValueError(f"File {filename} is empty or corrupted.")
+
+        logger.info(f"Validated file {filename} ({size_mb:.2f} MB)")
+
+    # --- Load CSVs ---
+    sales_df = pd.read_csv(RAW_DATA_DIR / "train.csv")
+    test_df = pd.read_csv(RAW_DATA_DIR / "test.csv")
+    features_df = pd.read_csv(RAW_DATA_DIR / "features.csv")
+    stores_df = pd.read_csv(RAW_DATA_DIR / "stores.csv")
+
+    logger.info("Raw files validated and loaded successfully")
 
     return sales_df, test_df, features_df, stores_df
 
@@ -39,10 +55,9 @@ def create_connection() -> sqlite3.Connection:
     Returns:
         sqlite3.Connection: Active database connection object.
     """
-    db_dir = PROJECT_ROOT / "db"
-    db_dir.mkdir(parents=True, exist_ok=True)
+    DB_DIR.mkdir(parents=True, exist_ok=True)
 
-    db_path = db_dir / "sales.db"
+    db_path = DB_DIR / "sales.db"
     logger.info("Connecting to database at %s", db_path)
 
     return sqlite3.connect(db_path)
@@ -71,7 +86,6 @@ def load_tables(
         "stores": stores_df,
     }
 
-    # Iterate over the dictionary to dump each DataFrame into its respective table
     for table_name, df in tables.items():
         df.to_sql(table_name, conn, if_exists="replace", index=False)
 
@@ -90,7 +104,7 @@ def create_views(conn: sqlite3.Connection) -> None:
     Raises:
         FileNotFoundError: If the SQL script file is not found in the expected path.
     """
-    sql_file = PROJECT_ROOT / "db" / "sql" / "create_views.sql"
+    sql_file = DB_DIR / "sql" / "create_views.sql"
 
     if not sql_file.exists():
         raise FileNotFoundError(f"SQL file not found at: {sql_file}")
@@ -98,7 +112,6 @@ def create_views(conn: sqlite3.Connection) -> None:
     with open(sql_file, "r", encoding="utf-8") as file:
         sql_script = file.read()
 
-    # Execute the complete SQL script sequentially
     conn.executescript(sql_script)
     logger.info("Views created successfully")
 
@@ -125,10 +138,8 @@ def create_sqlite_db() -> None:
     """Main function that orchestrates the construction of the SQLite analytical layer."""
     logger.info("Building SQLite analytics layer")
 
-    # 1. Load original CSV files including test dataset
     sales_df, test_df, features_df, stores_df = load_raw_data()
 
-    # 2. Manage database connection using a context manager to ensure safe closing
     with create_connection() as conn:
         load_tables(conn, sales_df, test_df, features_df, stores_df)
         create_views(conn)
