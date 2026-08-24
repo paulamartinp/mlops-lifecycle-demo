@@ -1,0 +1,10 @@
+stages:
+  train_pipeline:
+    cmd: python -m src.pipeline.training_pipeline
+    deps:
+      - src
+      - params.yaml
+      - data/raw
+      - db/sales.db
+    outs:
+      - models/champion.pkl
