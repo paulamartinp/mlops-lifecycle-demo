@@ -2,6 +2,7 @@ import joblib
 import pandas as pd
 from src.utils.paths import RAW_DATA_DIR, MODELS_DIR
 from src.utils.helpers import load_params, setup_logger
+from monitoring.prediction_logger import log_prediction
 
 logger = setup_logger(__name__)
 
@@ -69,16 +70,23 @@ class SalesPredictor:
         return df[self.feature_columns]
 
     def predict_single(self, raw_df: pd.DataFrame) -> float:
-        """Predicts weekly sales for a single raw input dataframe.
+        """Processes a single-row raw dataframe, generates a prediction, logs the payload, and returns the result.
 
         Args:
-            raw_df (pd.DataFrame): Raw input dataframe representing a single record.
+            raw_df (pd.DataFrame): A pandas DataFrame containing the raw features for a single instance.
 
         Returns:
-            float: Predicted weekly sales amount.
+            float: The model's numerical prediction.
+
+        Raises:
+            IndexError: If the DataFrame is empty and cannot be processed or indexed.
         """
         X_test = self.process_raw_dataframe(raw_df)
         prediction = float(self.model.predict(X_test)[0])
+
+        # Logging for monitoring
+        payload = raw_df.iloc[0].to_dict()
+        log_prediction(payload, prediction)
 
         return prediction
 
