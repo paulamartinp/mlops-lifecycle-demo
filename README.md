@@ -37,6 +37,7 @@ An enterprise-grade, end-to-end MLOps lifecycle implementation predicting weekly
   - [Dockerization](#-dockerization)
   - [CI/CD](#-cicd)
 - [🚀 Future Roadmap](#-future-roadmap--improvements)
+- [👨‍💻 Author](#-author)
 - [📄 License](#-license)
 
 ## 🎯 Project Objectives
@@ -483,6 +484,13 @@ Future iterations will explore:
 * Batch inference pipeline orchestrators (e.g., Prefect / Airflow)
 * Cloud deployment (AWS / GCP / Azure)
 * Kubernetes deployment (KServe / Helm charts)
+
+---
+
+## 👨‍💻 Author
+
+[![LinkedIn – Paula Martín Palomeque](https://img.shields.io/badge/LinkedIn-Paula%20Mart%C3%ADn%20Palomeque-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/paula-mart%C3%ADn-palomeque/)
+
 
 ---
 
