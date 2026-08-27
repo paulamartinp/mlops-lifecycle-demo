@@ -24,8 +24,22 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen
 
-      - name: Pull DVC data
-        run: uv run dvc pull
+      - name: Try DVC pull (public repo) or fallback to credentials
+        run: |
+          echo "Attempting DVC pull without credentials..."
+          if uv run dvc pull; then
+            echo "DVC pull succeeded without credentials."
+          else
+            echo "DVC pull failed. Configuring credentials..."
+            uv run dvc remote modify --local origin access_key_id "$DAGSHUB_USERNAME"
+            uv run dvc remote modify --local origin secret_access_key "$DAGSHUB_TOKEN"
+            echo "Retrying DVC pull with credentials..."
+            uv run dvc pull
+          fi
+        env:
+          DAGSHUB_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
+          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+
 
       - name: Run tests
         run: uv run pytest -q
