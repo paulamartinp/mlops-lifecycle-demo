@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - develop
+      - 'feature/**'
+  pull_request:
+    branches:
+      - develop
+      - main
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python & UV
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Lint
+        run: uv run flake8 .
+
+      - name: Run tests
+        run: uv run pytest -q
+
+      - name: Check DVC pipeline (sin datos)
+        run: |
+          uv run dvc doctor
+          uv run dvc status
+
+      - name: Build API Docker image
+        run: docker build -t api -f Dockerfile.api .
+
+      - name: Build UI Docker image
+        run: docker build -t ui -f Dockerfile.ui .
