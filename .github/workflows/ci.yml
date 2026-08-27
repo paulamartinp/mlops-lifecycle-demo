@@ -24,13 +24,11 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen
 
+      - name: Pull DVC data
+        run: dvc pull
+
       - name: Run tests
         run: uv run pytest -q
-
-      - name: Check DVC pipeline (sin datos)
-        run: |
-          uv run dvc doctor
-          uv run dvc status
 
       - name: Build API Docker image
         run: docker build -t api -f Dockerfile.api .
