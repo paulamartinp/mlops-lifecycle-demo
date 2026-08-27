@@ -470,8 +470,17 @@ You can run the stack entirely in containers or mix local execution with Docker 
 
 ### CI/CD
 
-GitHub Actions pipelines support linting, testing, and static analysis (Ruff, Pytest, SonarCloud).
+The repository features an automated CI/CD pipeline powered by GitHub Actions:
 
+* **CI (Continuous Integration):** Triggered on pushes to `develop` or `feature/**` branches and on pull requests targeting `develop` or `main`.
+  * Environment setup and dependency locking with `uv`.
+  * Unit and integration testing via `pytest`.
+  * Data pipeline health checks (`dvc doctor` and `dvc status`).
+  * Docker build verification for API and UI microservices.
+* **CD (Continuous Delivery / Deployment):** Triggered automatically on pushes to `main` (after merging a PR) or manually via `workflow_dispatch`.
+  * Authenticates with Docker Hub using repository secrets.
+  * Builds and tags production API and UI Docker images (`latest`).
+  * Automatically pushes updated images to Docker Hub.
 
 ---
 
