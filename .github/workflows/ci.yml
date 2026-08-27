@@ -25,7 +25,7 @@ jobs:
         run: uv sync --frozen
 
       - name: Pull DVC data
-        run: dvc pull
+        run: uv run dvc pull
 
       - name: Run tests
         run: uv run pytest -q
