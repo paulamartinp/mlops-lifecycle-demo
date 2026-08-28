@@ -281,9 +281,16 @@ The MLflow server must stay active while you execute the rest of the pipeline.
 ### Step 2: Execute the MLOps Pipeline
 With the tracking server active (keep that terminal running), open a **new clean terminal window** from the **root of the project** to continue with the workflow.
 
-From this new terminal, orchestrate the end‑to‑end workflow using DVC.  
-DVC automatically manages data lineage, dependencies, and stage caching:
+Before running the pipeline, make sure you have the latest version of the dataset and artifacts tracked by DVC.
+If the repository is public, this requires no credentials:
 
+```bash
+dvc pull
+```
+
+This command downloads all data dependencies defined in the DVC stages (datasets, intermediate artifacts, feature stores, etc.). Once the data is synced locally, you will be ready to build the apps in the next step.
+
+Optionally, you can rchestrate the end‑to‑end workflow using DVC::
 
 ```bash
 dvc repro
@@ -470,8 +477,17 @@ You can run the stack entirely in containers or mix local execution with Docker 
 
 ### CI/CD
 
-GitHub Actions pipelines support linting, testing, and static analysis (Ruff, Pytest, SonarCloud).
+The repository features an automated CI/CD pipeline powered by GitHub Actions:
 
+* **CI (Continuous Integration):** Triggered on pushes to `develop` or `feature/**` branches and on pull requests targeting `develop` or `main`.
+  * Environment setup and dependency locking with `uv`.
+  * Unit and integration testing via `pytest`.
+  * Data pipeline health checks (`dvc doctor` and `dvc status`).
+  * Docker build verification for API and UI microservices.
+* **CD (Continuous Delivery / Deployment):** Triggered automatically on pushes to `main` (after merging a PR) or manually via `workflow_dispatch`.
+  * Authenticates with Docker Hub using repository secrets.
+  * Builds and tags production API and UI Docker images (`latest`).
+  * Automatically pushes updated images to Docker Hub.
 
 ---
 
