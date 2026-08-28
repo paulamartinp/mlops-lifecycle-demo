@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - develop
+      - 'feature/**'
+  pull_request:
+    branches:
+      - develop
+      - main
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python & UV
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Try DVC pull (public repo) or fallback to credentials
+        run: |
+          echo "Attempting DVC pull without credentials..."
+          if uv run dvc pull; then
+            echo "DVC pull succeeded without credentials."
+          else
+            echo "DVC pull failed. Configuring S3 credentials..."
+            uv run dvc remote modify --local origin access_key_id "$DAGSHUB_S3_ACCESS_KEY"
+            uv run dvc remote modify --local origin secret_access_key "$DAGSHUB_S3_SECRET_KEY"
+            echo "Retrying DVC pull with S3 credentials..."
+            uv run dvc pull
+          fi
+        env:
+          DAGSHUB_S3_ACCESS_KEY: ${{ secrets.DAGSHUB_S3_ACCESS_KEY }}
+          DAGSHUB_S3_SECRET_KEY: ${{ secrets.DAGSHUB_S3_SECRET_KEY }}
+
+
+
+      - name: Run tests
+        run: uv run pytest -q
+
+      - name: Build API Docker image
+        run: docker build -t api -f Dockerfile.api .
+
+      - name: Build UI Docker image
+        run: docker build -t ui -f Dockerfile.ui .

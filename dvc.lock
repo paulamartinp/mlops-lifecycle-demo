@@ -1,0 +1,49 @@
+schema: '2.0'
+stages:
+  download_data:
+    cmd: python -m src.data.download_kaggle
+    outs:
+    - path: data/raw
+      hash: md5
+      md5: 5216646fe9bcbde856045a960920f23a.dir
+      size: 16033444
+      nfiles: 4
+  create_db:
+    cmd: python -m src.data.sqlite_layer
+    deps:
+    - path: data/raw
+      hash: md5
+      md5: 5216646fe9bcbde856045a960920f23a.dir
+      size: 16033444
+      nfiles: 4
+    outs:
+    - path: db/sales.db
+      hash: md5
+      md5: c8dae64a7700706819e0f251a7ab4722
+      size: 16699392
+  train_pipeline:
+    cmd: python -m src.pipelines.training_pipeline
+    deps:
+    - path: data/raw
+      hash: md5
+      md5: 5216646fe9bcbde856045a960920f23a.dir
+      size: 16033444
+      nfiles: 4
+    - path: db/sales.db
+      hash: md5
+      md5: c8dae64a7700706819e0f251a7ab4722
+      size: 16699392
+    - path: params.yaml
+      hash: md5
+      md5: 1e56c4d3b27fa9cea39d8581abc58685
+      size: 1016
+    - path: src
+      hash: md5
+      md5: 7e78aad93a3221b5db405eaa7f57f928.dir
+      size: 117513
+      nfiles: 27
+    outs:
+    - path: models/champion.pkl
+      hash: md5
+      md5: a6d389120c62fa95d2a69eda05535c19
+      size: 993650

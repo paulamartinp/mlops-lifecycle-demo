@@ -216,3 +216,23 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+#Project
+*.csv
+.python-version
+main.py
+.env
+.kaggle
+
+data/raw/
+data/processed/
+data/features/
+db/sales.db
+
+mlflow.db
+mlruns/1/
+*.pkl
+
+monitoring/logs/*.csv
+monitoring/reports/*.html
+monitoring/reference/*.parquet
