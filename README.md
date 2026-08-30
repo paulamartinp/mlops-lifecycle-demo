@@ -158,8 +158,17 @@ Any change made in `params.yaml` automatically propagates through DVC pipelines,
 
 Make sure you have the following ready before running the project:
 
-### A. Kaggle API Token
-The automated data ingestion pipeline pulls datasets directly from Kaggle via API.
+### A. Kaggle API Token (Optional)
+The project datasets and generated artifacts are versioned with DVC and stored in a remote S3 backend.
+
+As a result, a Kaggle account and API token are **not required** for the standard setup process. A Kaggle API token is necessary if you want to:
+
+* Reproduce the complete pipeline from the oriignal data source.
++ Rebuild the dataset scratch using `dvc repro`.
++ Use a different Kaggle dataset.
++ Recover the project in the event that DVC remote storage becomes unavailable.
+
+To genereate a Kaggle API token:
 
 1. Sign in to [Kaggle](https://www.kaggle.com/).
 2. Go to your **Account Settings**.
@@ -209,7 +218,7 @@ Open `.env` and fill in your details:
 KAGGLE_USERNAME=your_username
 KAGGLE_KEY=your_api_key
 ```
-
+> Press Ctrl + S to save your changes
 ---
 
 ### Step 3: Install Dependencies with `uv`
