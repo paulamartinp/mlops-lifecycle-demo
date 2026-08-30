@@ -1,6 +1,6 @@
 # 🛒 MLOps End-to-End Lifecycle Demo: Walmart Sales Forecasting
 
-An enterprise-grade, end-to-end MLOps lifecycle implementation predicting weekly sales across different Walmart stores and departments based on based on the **[Walmart Store Sales Forecasting Dataset](https://www.kaggle.com/datasets/aslanahmedov/walmart-sales-forecast)**. This project covers data version control, experiment tracking, automated pipelines, model registry, containerization, monitoring, and a full-stack serving layout.
+An enterprise-grade, production-ready MLOps implementation for predicting weekly sales across Walmart stores and departments using the **[Walmart Store Sales Forecasting Dataset](https://www.kaggle.com/datasets/aslanahmedov/walmart-sales-forecast)**. This repository showcases a complete machine learning lifecycle: data version control; experiment tracking, automated CI/CD pipelines, model registry, containerized serving, and performance monitoring.
 
 [![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/)
 [![uv](https://img.shields.io/badge/package%20manager-uv-purple.svg)](https://github.com/astral-sh/uv)
@@ -15,30 +15,17 @@ An enterprise-grade, end-to-end MLOps lifecycle implementation predicting weekly
 - [🎯 Project Objectives](#-project-objectives)
 - [📁 Repository Structure](#-repository-structure)
 - [📊 Data Overview](#-data-overview)
-- [🛠 Technologies and Architecture](#-technologies-and-architecture)
+- [🛠 Technologies & Architecture](#-technologies--architecture)
 - [⚙ Centralized Configuration](#-centralized-configuration)
 - [🚀 Quick Start](#-quick-start)
-  - [Prerequisites](#a-kaggle-api-token)
-  - [Setup & Installation](#2-setup--installation)
 - [🕹️ How to Run the Project](#️-how-to-run-the-project)
-  - [Step 1: Start the MLflow Tracking Server](#step-1-start-the-mlflow-tracking-server)
-  - [Step 2: Execute the MLOps Pipeline](#step-2-execute-the-mlops-pipeline)
-  - [Step 3: Production Serving](#step-3-production-serving-choose-your-approach)
-  - [Step 4: Production Logging & Drift Monitoring](#step-4-production-logging--drift-monitoring)
 - [🏅 Kaggle Submission](#-kaggle-submission-overview)
-- [🧩 Step-by-Step Learning Path](#-step-by-step-learning-path-git-branches)
-- [🧭 Overview](#-overview)
-  - [Model Training](#-model-training-overview)
-  - [MLflow Experiment Tracking](#-mlflow-experiment-tracking)
-  - [Model Registry](#-model-registry)
-  - [FastAPI Service](#-fastapi-service)
-  - [Gradio UI](#-gradio-ui)
-  - [Monitoring & Drift](#-monitoring--drift)
-  - [Dockerization](#-dockerization)
-  - [CI/CD](#-cicd)
+- [🧩 Learning Path (Git Branches)](#-step-by-step-learning-path-git-branches)
+- [🧭 Overview (Screenshots & Details)](#-overview)
 - [🚀 Future Roadmap](#-future-roadmap--improvements)
 - [👨‍💻 Author](#-author)
 - [📄 License](#-license)
+
 
 ## 🎯 Project Objectives
 
@@ -111,14 +98,13 @@ mlops-lifecycle-demo/
 
 ---
 
-
 ## ⚙ Centralized Configuration
 
 All pipeline settings, feature definitions, and model hyperparameters are centralized in a single configuration file:
 
 [`params.yaml`](./params.yaml)
 
-This file acts as the source of truth for the entire MLOps workflow. Any update to model settings, feature lists, or training parameters is managed here.
+This file serves as the source of truth for the entire MLOps workflow. Any update to model settings, feature lists, or training parameters is managed here and automatically propagated across the pipeline.
 
 ### Example
 
@@ -136,19 +122,7 @@ train:
     ...
 ```
 
-This file controls:
-
-* Feature selection
-
-* Model hyperparameters (baseline, XGBoost, LightGBM)
-
-* Training pipeline parameters (random state, model list, feature groups)
-
-* MLflow experiment and registry behavior
-
-* Dataset metadata and paths
-
-Any change made in `params.yaml` automatically propagates through DVC pipelines, MLflow runs, and the serving stack, keeping the entire lifecycle aligned and reproducible.
+Any change made in `params.yaml` flows through DVC pipelines, MLflow runs, and the serving stack, ensuring a fully aligned and reproducible lifecycle.
 
 ---
 
@@ -156,23 +130,57 @@ Any change made in `params.yaml` automatically propagates through DVC pipelines,
 
 ### 1. Prerequisites
 
-Make sure you have the following ready before running the project:
+Before running the project, make sure you have the following tools installed and available.
 
-### A. Kaggle API Token (Optional)
-The project datasets and generated artifacts are versioned with DVC and stored in a remote S3 backend.
+---
 
-As a result, a Kaggle account and API token are **not required** for the standard setup process. A Kaggle API token is necessary if you want to:
+### 1.1) Python and `uv` Package Manager (Required)
 
-* Reproduce the complete pipeline from the oriignal data source.
-+ Rebuild the dataset scratch using `dvc repro`.
-+ Use a different Kaggle dataset.
-+ Recover the project in the event that DVC remote storage becomes unavailable.
+This project requires **Python 3.11+** and uses **[uv](https://github.com/astral-sh/uv)** for fast, reproducible dependency management.
 
-To genereate a Kaggle API token:
+* **Python:** Download and install version 3.11 or newer from the [official Python website](https://www.python.org/downloads/). Verify your installation:
+  ```bash
+  python --version
+  ```
+* **UV**: Install `uv` via the [official installation guide](https://docs.astral.sh/uv/getting-started/installation/).
+* Verify the installation in the terminal:
 
-1. Sign in to [Kaggle](https://www.kaggle.com/).
-2. Go to your **Account Settings**.
+  ```bash
+  uv --version
+  ```
+
+---
+
+### 1.2). Docker Desktop (Optional but Recommended)
+
+If you plan to run the FastAPI and Gradio services via Docker Compose, you’ll need Docker Desktop.
+
+> Note: Skip this requirement if you prefer running services locally via terminal commands.
+
+* Install the latest version of [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+
+* Ensure Docker Desktop is **open and running** before executing any Docker commands.
+
+
+---
+
+
+### 1.3) Kaggle API Token (Optional)
+
+A Kaggle account and API token are **not required** for the standard setup because all datasets and artifacts are already versioned with DVC and stored in a public S3 remote.
+
+You only need a Kaggle API token if you want to:
+
+- Re-download and reproduce the pipeline from the original Kaggle dataset  
+- Rebuild the dataset from scratch using `dvc repro`  
+- Recover the project if the DVC remote becomes unavailable  
+
+To generate a Kaggle API token:
+
+1. Sign in to [Kaggle](https://www.kaggle.com/)
+2. Open **Account Settings**
 3. Scroll to the **API** section and click **Generate New Token**:
+
    ```text
    Kaggle ➔ Settings ➔ API ➔ Generate New Token
    ```
@@ -181,32 +189,55 @@ To genereate a Kaggle API token:
 
 > ⚠️ **Important:** Kaggle only provides this key at the moment of creation. Save or copy your credentials immediately—if you lose them, you will need to generate a new key.
 
-### B. Python and `uv` Package Manager
-This project leverages **uv** for lightning-fast dependency management.
-
-* Install `uv` via the [official installation guide](https://docs.astral.sh/uv/getting-started/installation/).
-* Verify the installation in the terminal:
-
-  ```bash
-  uv --version
-  ```
-
-### C. Docker Desktop (Optional)
-If you want to run the application services (API and UI) inside containerized environments using Docker Compose, make sure you have the latest version of [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running on your machine.
-
 ---
 
 ### 2. Setup & Installation
 
-### Step 1: Clone the Repository
+### 2.1) Step 1 — Clone the Repository
+
 ```bash
-git clone [https://github.com/](https://github.com/)<your-user>/mlops-lifecycle-demo.git
+git clone https://github.com/paulamartinp/mlops-lifecycle-demo.git
+```
+```bash
 cd mlops-lifecycle-demo
 ```
 ---
 
-### Step 2: Configure Environment Variables
-Copy the template environment file and populate your Kaggle credentials:
+### 2.2) Step 2 — Install Dependencies with `uv`
+Synchronize the environment from the project root:
+
+```bash
+uv sync
+```
+
+This command:
+
+- Creates an isolated .venv
+
+- Installs all dependencies from the lockfile
+
+> *(Learn more in the [uv project layout documentation](https://docs.astral.sh/uv/concepts/projects/layout/))*
+
+---
+
+### 2.3) Step 3 — Activate the Virtual Environment
+**Windows (PowerShell):**
+```powershell
+.\.venv\Scripts\Activate
+```
+
+**macOS / Linux:**
+```bash
+source .venv/bin/activate
+```
+
+Your terminal prompt will now show the environment name.
+
+### 2.4) Step 4 — Configure Environment Variables (Optional)
+> Note:
+If you only want to run the project using pre‑built DVC artifacts, this step is optional.
+
+If you plan to rebuild the dataset from Kaggle, configure your credentials:
 
 ```bash
 cp .env.example .env
@@ -221,54 +252,17 @@ KAGGLE_KEY=your_api_key
 > Press Ctrl + S to save your changes
 ---
 
-### Step 3: Install Dependencies with `uv`
-Run the synchronization command from the project root:
-
-```bash
-uv sync
-```
-
-> ℹ️ **What `uv sync` does:**
-> * Creates an isolated virtual environment (`.venv`)
-> * Installs all project dependencies from the lockfile
-> * Ensures exact environment reproducibility
->
-> *(Learn more in the [uv project layout documentation](https://docs.astral.sh/uv/concepts/projects/layout/))*
-
----
-
-### Step 4: Activate Virtual Environment
-Activate `.venv` according to your operating system:
-
-**Windows (PowerShell):**
-```powershell
-.\.venv\Scripts\Activate
-```
-
-**macOS / Linux:**
-```bash
-source .venv/bin/activate
-```
-
-*(Your terminal prompt will now prefix with the .venv name)*
-
-> Note: If you experience activation issues on Windows (PowerShell execution policy, WSL conflicts, or Docker interference), you can safely bypass manual activation by prefixing all commands with:
-`uv run <command>` and uv automatically activates the correct environment for you.
-
-
-🚀 **You are now ready to run the project pipeline!**
-
 ---
 
 ## 🕹️ How to Run the Project
 
-To run the full automated workflow—from data ingestion and model training to experiment tracking and production serving—follow the steps below.
+Run the full automated workflow—from data ingestion and model training to experiment tracking and production serving.
 
 ---
 
 ### Prerequisites & Quick Start Overview
 
-Depending on your goal, you can either **consume pre-built artifacts** (fastest) or **run the full training & tracking pipeline from scratch**.
+Choose your workflow depending on your goal:
 
 | Goal | Required Steps |
 | :--- | :--- |
@@ -277,32 +271,35 @@ Depending on your goal, you can either **consume pre-built artifacts** (fastest)
 
 ---
 
-## Step 1: Sync Data & Artifacts (DVC)
-
-Before running predictions or retraining, make sure you have the latest version of the dataset and artifacts tracked by DVC. 
-
-Since the repository uses a **public S3 bucket**, this requires no credentials:
+### Step 1 — Sync Data & Artifacts (DVC)
+Download the latest dataset and artifacts from the public S3 remote:
 
 ```bash
 dvc pull
 ```
 
-This command downloads all data dependencies defined in the DVC stages (datasets, intermediate artifacts, feature stores, etc.). Once the data is synced locally, you will be ready to build the apps in step nº3.
+This retrieves:
+
+* Raw datasets
+
+* Intermediate artifacts
+
+* Feature stores
+
+* Trained models
 
 
-> 💡 Note on Remote Storage:
->The project uses a public S3 bucket hosted under a free-tier AWS account.
+> If `dvc pull works`, you **do not need to retrain** unless you want to inspect experiments or modify the pipeline.
 
-> - If dvc pull succeeds, you do not need to run MLflow or retraining (`dvc repro`) unless you want to inspect experiments in the UI or actively modify the pipeline.
+> If the S3 bucket becomes unavailable, or anything breaks at this step, regenerate everything locally using Step 2.
 
-> - If the S3 bucket is unavailable (e.g., free-tier expiration or network restrictions), you can regenerate all data and artifacts locally by running the full reproduction pipeline in Step 2.
+---
 
+### Step 2 — Execute the MLOps Pipeline (Optional)
+Use this step only if you want to retrain models, log metrics, or inspect experiments.
 
-### Step 2: Execute the MLOps Pipeline & MLflow Tracking (Optional)
-If you want to retrain models, track metrics, or view live experiment logs, follow this section.
-
-#### 2.1 Start the MLflow Tracking Server
-Before running the retraining pipeline, spin up the local MLflow server to log parameters, metrics, and artifacts. Run the following command from the project root:
+#### 2.1) Start the MLflow Tracking Server
+Run the following command from the project root:
 
 ```bash
 mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns --host 127.0.0.1 --port 5000 --workers 1
@@ -317,18 +314,13 @@ Once the server starts, you should see logs similar to:
 ```
 This means the MLflow UI is available at http://127.0.0.1:5000. You can open it in your browser.
 
-> **IMPORTANT**: Keep this terminal running.
-The MLflow server must stay active while you execute the rest of the pipeline.
+> Keep this terminal running. The MLflow server must stay active while you execute the rest of the pipeline.
 
 ---
 
-#### 2.2 Execute the Pipeline (Choose Your Approach)
+#### 2.2) Run the Pipeline (Choose One)
 
-With the tracking server active (in your first terminal), open a new clean terminal window from the root of the project to run the workflow.
-
-#### Option A: Orchestrate via DVC (Recommended)
-Run the complete data and model lifecycle DAG stages:
-
+**Option A — DVC Orchestration (Recommended)**
 ```bash
 dvc repro
 ```
@@ -339,33 +331,29 @@ This executes the complete data and model lifecycle DAG stages:
 Data Ingestion ➔ SQLite Load ➔ Feature Engineering ➔ Model Training ➔ MLflow Tracking ➔ Model Registry
 ```
 
-#### Option B: Python Wrapper Alternative
-You can also run the core training pipeline sequentially via Python:
-
+**Option B — Python Wrapper**
 ```bash
 python -m src.pipelines.training_pipeline
 ```
-> Note: While this executes the same logical workflow, it runs without DVC’s reproducibility guarantees, automatic dependency hash-checking, or stage re-execution caching.
+> Same workflow, but without DVC’s reproducibility guarantees.
 
 ---
 
-### Step 3: Production Serving (Choose Your Approach)
+### Step 3 — Production Serving (Choose One)
 
-Once your data is synced (Step 1) and/or your models are trained (Step 2), choose your preferred production serving approach to expose predictions to end-users or downstream applications.
+Expose predictions via API + UI.
 
 ---
 
-#### Option A: Containerized Deployment (Recommended)
+**Option A — Dockerized Deployment (Recommended)**
 
-Run the entire system in an isolated, production‑like environment without worrying about local dependencies:
+With Docker Desktop open, run the following command in the project's root directory:
 
 ```bash
 docker compose up --build
 ```
 
-#### Option B: Local Execution (Without Docker)
-
-If you prefer not to use Docker, you can run the services natively in your Python environment. Open two separate terminal windows:
+**Option B — Local Execution**
 
 * Terminal 1: Run the FastAPI Backend
     ```bash
@@ -391,33 +379,30 @@ As predictions are made (either through the API or the UI), they are automatical
 monitoring/prediction_logs.csv
 ```
 
-These logs are compared against a reference dataset to detect data or model drift.
-Evidently AI generates an HTML dashboard summarizing feature stability and target drift.
-
 Generate the drift report:
 ```bash
 python -m monitoring.drift
 ```
-This produces:
+Output:
 ```bash
 reports/drift_report.html
 ```
 
-A visual summary of drift metrics and data health.
+A complete HTML dashboard with feature stability and drift metrics.
 
 ---
 
 ## 🏅 Kaggle Submission (Overview)
 
-While leaderboard ranking is strictly **out of scope** for this project, you can easily evaluate your iterative model improvements against Kaggle's official test set.
+Although leaderboard ranking is **out of scope**, you can benchmark your model against Kaggle’s official test set at any time.
 
-Generating a submission automatically utilizes the current **`@champion`** model from the registry:
+The submission pipeline automatically uses the current **`@champion`** model from the MLflow Model Registry:
 
 ```bash
 uv run python -m src.pipelines.inference_pipeline
 ```
 
-This generates `submission.csv` in the root directory, formatted and ready to upload directly to Kaggle so you can benchmark your experiments!
+This generates a `submission.csv` file in the project root, fully formatted and ready to upload to Kaggle.
 
 🔗 **Competition Link:** [Walmart Recruiting - Store Sales Forecasting](https://www.kaggle.com/competitions/walmart-recruiting-store-sales-forecasting)
 
@@ -427,59 +412,51 @@ This generates `submission.csv` in the root directory, formatted and ready to up
 
 ## 🧩 Step-by-Step Learning Path (Git Branches)
 
-If you prefer exploring or developing the system incrementally following industry-standard MLOps maturity steps, you can switch between dedicated feature branches:
+This project includes a progressive learning path through dedicated feature branches.  
+Each branch isolates a core MLOps concept so you can explore the system incrementally.
 
-| Branch Name | Scope / Focus | MLOps Practice Highlight |
-| :--- | :--- | :--- |
-| `feature/01-data-ingestion` | Automated data download & extraction | Automated ingestion from source APIs |
-| `feature/02-sql-layer` | Local SQLite database setup & storage | Structured persistence layer |
-| `feature/03-eda` | Exploratory data analysis & quality checks | Data validation & profiling |
-| `feature/04-data-preparation` | Data preprocessing & feature pipelines | Modular transformation scripts |
-| `feature/05-model-training` | Model development & evaluation | Algorithm benchmarking & tuning |
-| `feature/06-mlflow` | MLflow experiment tracking integration | Metric & parameter governance |
-| `feature/07-dvc` | Data versioning & stage tracking | Reproducible data pipelines |
-| `feature/08-fast-api` | REST API development with FastAPI | Production-grade model serving |
-| `feature/09-gradio-ui` | Interactive user interface with Gradio | Stakeholder accessibility |
-| `feature/10-monitoring` | Performance, data drift & observability | Post-deployment monitoring (Evidently) |
-| `feature/11-docker` | Containerizing application services | Environment parity & microservices |
-| `feature/12-ci-cd` | Automated CI/CD workflows & testing | Continuous integration & deployment |
+| Branch | Focus | MLOps Concept |
+|--------|--------|----------------|
+| `feature/01-data-ingestion` | Data download & extraction | Automated ingestion |
+| `feature/02-sql-layer` | SQLite storage | Structured persistence |
+| `feature/03-eda` | EDA & quality checks | Data validation |
+| `feature/04-data-preparation` | Preprocessing & feature pipelines | Modular transformations |
+| `feature/05-model-training` | Model development | Benchmarking & tuning |
+| `feature/06-mlflow` | MLflow integration | Experiment tracking |
+| `feature/07-dvc` | Data versioning | Reproducible pipelines |
+| `feature/08-fast-api` | REST API | Production serving |
+| `feature/09-gradio-ui` | Interactive UI | Stakeholder accessibility |
+| `feature/10-monitoring` | Drift & observability | Post-deployment monitoring |
+| `feature/11-docker` | Containerization | Environment parity |
+| `feature/12-ci-cd` | CI/CD automation | Continuous integration & delivery |
 
-> **Tip:** Switch to any module using `git checkout <branch-name>` to inspect or test specific implementations independently.
+> Switch modules with: `git checkout <branch-name>`.
 
 ---
 
-## 🧭 Overview
+## 🧭 Overview (Screenshots & Details)
 
 ### Model Training
-
-The project trains three forecasting models — **Baseline**, **XGBoost**, and **LightGBM** — using a unified, automated pipeline.  
-Core steps such as feature validation, chronological splitting, model evaluation, and MLflow logging are handled internally.
-
+Unified automated pipeline training **Baseline**, **XGBoost**, and **LightGBM** models.  
+Includes feature validation, chronological splits, evaluation, and MLflow logging.
 
 ---
 
 ### MLflow Experiment Tracking
-
-All training runs are automatically logged to MLflow, including:
-* Hyperparameters  
-* Metrics (MAE, RMSE)  
-* Execution time  
-* Artifacts (models, plots, preprocessing steps)
+MLflow logs all training runs, including hyperparameters, metrics (MAE, RMSE), execution time, and artifacts.
 
 ![MLflow Experiments](docs/images/mlflow_ui.png)
 
 ---
 
 ### Model Registry
-
-The best-performing model is promoted to the **MLflow Model Registry** under the `@champion` alias or Promotion Stage.  
-The serving stack (API/UI) always loads this alias, enabling seamless model updates without code changes.
+The best model is promoted to the MLflow Model Registry under the **`@champion`** alias.  
+Both API and UI always load this alias for seamless model updates.
 
 ---
 
 ### FastAPI Service
-
-The API exposes:
+Production-ready API exposing:
 - `GET /health` — service + registry status  
 - `POST /predict` — real-time weekly sales prediction  
 
@@ -488,57 +465,53 @@ The API exposes:
 ---
 
 ### Gradio UI
-
-The UI provides an interactive form for single predictions, automatically using the current `@champion` model.
+Interactive UI for single predictions, automatically using the current `@champion` model.
 
 ![Gradio](docs/images/gradio.png)
 
 ---
 
 ### Monitoring & Drift
-
-Production predictions are logged (`monitoring/prediction_logs.csv`) and compared against a reference dataset to detect drift.  
-[Evidently AI](https://www.evidentlyai.com/) generates an HTML dashboard summarizing feature and target stability.
+Predictions are logged to `monitoring/prediction_logs.csv` and compared against a reference dataset.  
+Evidently AI generates an HTML dashboard showing feature and target drift.
 
 ![Monitoring](docs/images/drift.png)
 
 ---
 
 ### Dockerization
-
-The project includes a full multi-service Docker setup (API + UI).  
-You can run the stack entirely in containers or mix local execution with Docker services.
+Full multi-service Docker setup (API + UI).  
+Run the entire stack in containers or mix local execution with Docker services.
 
 ![Docker](docs/images/docker.png)
 
 ---
 
 ### CI/CD
+Automated GitHub Actions pipeline:
 
-The repository features an automated CI/CD pipeline powered by GitHub Actions:
+**CI:**  
+- Dependency setup with `uv`  
+- Tests via `pytest`  
+- DVC pipeline checks  
+- Docker build validation  
 
-* **CI (Continuous Integration):** Triggered on pushes to `develop` or `feature/**` branches and on pull requests targeting `develop` or `main`.
-  * Environment setup and dependency locking with `uv`.
-  * Unit and integration testing via `pytest`.
-  * Data pipeline health checks (`dvc doctor` and `dvc status`).
-  * Docker build verification for API and UI microservices.
-* **CD (Continuous Delivery / Deployment):** Triggered automatically on pushes to `main` (after merging a PR) or manually via `workflow_dispatch`.
-  * Authenticates with Docker Hub using repository secrets.
-  * Builds and tags production API and UI Docker images (`latest`).
-  * Automatically pushes updated images to Docker Hub.
+**CD:**  
+- Triggered on pushes to `main`  
+- Authenticates with Docker Hub  
+- Builds & tags production API/UI images  
+- Pushes updated images to Docker Hub  
 
 ---
 
 ## 🚀 Future Roadmap & Improvements
-
-Future iterations will explore:
-* Feature Store integration (e.g., Feast)
-* Automated hyperparameter tuning with Optuna
-* Automated retraining triggers upon drift detection
-* Batch inference pipeline orchestrators (e.g., Prefect / Airflow)
-* Cloud deployment (AWS / GCP / Azure)
-* Kubernetes deployment (KServe / Helm charts)
-
+Planned enhancements:
+- Hyperparameter tuning (Optuna)  
+- Automated retraining on drift  
+- Batch inference orchestration (Prefect / Airflow)  
+- Cloud deployment (AWS / GCP / Azure)  
+- Kubernetes deployment (KServe / Helm)  
+ 
 ---
 
 ## 👨‍💻 Author
