@@ -257,8 +257,43 @@ To run the full automated workflow—from data ingestion and model training to e
 
 ---
 
-### Step 1: Start the MLflow Tracking Server
-Before running the pipeline, spin up the local MLflow server. Run the following command from the project root:
+### Prerequisites & Quick Start Overview
+
+Depending on your goal, you can either **consume pre-built artifacts** (fastest) or **run the full training & tracking pipeline from scratch**.
+
+| Goal | Required Steps |
+| :--- | :--- |
+| **Just run / evaluate the model** | Step 1 (`dvc pull`) ➔ Step 3 (Serving) |
+| **Train models & track experiments** | Step 1 (`dvc pull` or `dvc repro`) + Step 2 (MLflow & Pipeline) ➔ Step 3 |
+
+---
+
+## Step 1: Sync Data & Artifacts (DVC)
+
+Before running predictions or retraining, make sure you have the latest version of the dataset and artifacts tracked by DVC. 
+
+Since the repository uses a **public S3 bucket**, this requires no credentials:
+
+```bash
+dvc pull
+```
+
+This command downloads all data dependencies defined in the DVC stages (datasets, intermediate artifacts, feature stores, etc.). Once the data is synced locally, you will be ready to build the apps in step nº3.
+
+
+> 💡 Note on Remote Storage:
+>The project uses a public S3 bucket hosted under a free-tier AWS account.
+
+> - If dvc pull succeeds, you do not need to run MLflow or retraining (`dvc repro`) unless you want to inspect experiments in the UI or actively modify the pipeline.
+
+> - If the S3 bucket is unavailable (e.g., free-tier expiration or network restrictions), you can regenerate all data and artifacts locally by running the full reproduction pipeline in Step 2.
+
+
+### Step 2: Execute the MLOps Pipeline & MLflow Tracking (Optional)
+If you want to retrain models, track metrics, or view live experiment logs, follow this section.
+
+#### 2.1 Start the MLflow Tracking Server
+Before running the retraining pipeline, spin up the local MLflow server to log parameters, metrics, and artifacts. Run the following command from the project root:
 
 ```bash
 mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns --host 127.0.0.1 --port 5000 --workers 1
@@ -278,19 +313,12 @@ The MLflow server must stay active while you execute the rest of the pipeline.
 
 ---
 
-### Step 2: Execute the MLOps Pipeline
-With the tracking server active (keep that terminal running), open a **new clean terminal window** from the **root of the project** to continue with the workflow.
+#### 2.2 Execute the Pipeline (Choose Your Approach)
 
-Before running the pipeline, make sure you have the latest version of the dataset and artifacts tracked by DVC.
-If the repository is public, this requires no credentials:
+With the tracking server active (in your first terminal), open a new clean terminal window from the root of the project to run the workflow.
 
-```bash
-dvc pull
-```
-
-This command downloads all data dependencies defined in the DVC stages (datasets, intermediate artifacts, feature stores, etc.). Once the data is synced locally, you will be ready to build the apps in the next step.
-
-Optionally, you can rchestrate the end‑to‑end workflow using DVC::
+#### Option A: Orchestrate via DVC (Recommended)
+Run the complete data and model lifecycle DAG stages:
 
 ```bash
 dvc repro
@@ -302,18 +330,19 @@ This executes the complete data and model lifecycle DAG stages:
 Data Ingestion ➔ SQLite Load ➔ Feature Engineering ➔ Model Training ➔ MLflow Tracking ➔ Model Registry
 ```
 
-Alternative (Python Wrapper): You can also run the core training pipeline sequentially via Python:
+#### Option B: Python Wrapper Alternative
+You can also run the core training pipeline sequentially via Python:
 
 ```bash
 python -m src.pipelines.training_pipeline
 ```
-> Note: While this executes the same logical workflow, it runs without DVC’s reproducibility guarantees, automatic dependency tracking, or stage re-execution caching.
+> Note: While this executes the same logical workflow, it runs without DVC’s reproducibility guarantees, automatic dependency hash-checking, or stage re-execution caching.
 
 ---
 
 ### Step 3: Production Serving (Choose Your Approach)
 
-Now that your model is trained and registered, it's time to serve it via the FastAPI backend and the Interactive UI. You can choose between a containerized deployment or running the services locally.
+Once your data is synced (Step 1) and/or your models are trained (Step 2), choose your preferred production serving approach to expose predictions to end-users or downstream applications.
 
 ---
 

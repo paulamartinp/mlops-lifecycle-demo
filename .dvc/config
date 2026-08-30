@@ -1,5 +1,8 @@
 [core]
     remote = origin
+
 ['remote "origin"']
-    url = s3://dvc
-    endpointurl = https://dagshub.com/paulamartinp/mlops-lifecycle-demo.s3
+    url = s3://mlops-lifecycle-demo/dvc-store
+    region = eu-west-1
+    endpointurl = https://s3.eu-west-1.amazonaws.com
+    allow_anonymous_login = true
